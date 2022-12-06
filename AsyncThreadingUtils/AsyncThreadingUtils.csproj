@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <LangVersion>11</LangVersion>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Pustalorc.Libraries.AsyncThreadingUtils</RootNamespace>
+        <TargetFrameworks>net481;net6.0;net7.0</TargetFrameworks>
+        <Company>Pustalorc</Company>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+    </ItemGroup>
+
+</Project>

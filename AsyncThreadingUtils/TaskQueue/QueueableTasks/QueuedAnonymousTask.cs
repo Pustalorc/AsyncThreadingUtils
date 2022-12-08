@@ -22,7 +22,7 @@ public sealed class QueuedAnonymousTask : QueueableTask
     ///     The constructor for anonymous classes.
     /// </summary>
     /// <param name="functionToExecute">The <see cref="T:System.Func`2" /> that will be executed.</param>
-    /// <param name="delay">The delay (in seconds) before this task should be executed.</param>
+    /// <param name="delay">The delay (in milliseconds) before this task should be executed.</param>
     /// <param name="repeating">A boolean determining if this task should repeat after execution.</param>
     public QueuedAnonymousTask(Func<CancellationToken, Task> functionToExecute, long delay, bool repeating) :
         base(delay)

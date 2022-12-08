@@ -2,16 +2,17 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Pustalorc.Libraries.AsyncThreadingUtils.TaskQueue.Implementations;
 
 namespace Pustalorc.Libraries.AsyncThreadingUtils.TaskQueue.QueueableTasks;
 
 /// <summary>
-///     An abstract class that allows a user to define a custom Queueable Task for the <see cref="TaskQueueManager" />.
+///     An abstract class that allows a user to define a custom Queueable Task for the <see cref="TaskQueue" />.
 /// </summary>
 public abstract class QueueableTask
 {
     /// <summary>
-    ///     The delay (in seconds) before this task should be executed.
+    ///     The delay (in milliseconds) before this task should be executed.
     /// </summary>
     [UsedImplicitly]
     protected long Delay { get; set; }
@@ -37,11 +38,11 @@ public abstract class QueueableTask
     /// <summary>
     ///     The constructor for all queueable tasks.
     /// </summary>
-    /// <param name="initialDelay">The initial delay (in seconds) before the task executes. Defaults to 0</param>
+    /// <param name="initialDelay">The initial delay (in milliseconds) before the task executes. Defaults to 0</param>
     protected QueueableTask(long initialDelay = 0)
     {
         Delay = initialDelay;
-        var currentUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var currentUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         UnixTimeStampToExecute = currentUnixTimestamp + Delay;
     }
 
@@ -74,7 +75,7 @@ public abstract class QueueableTask
     [UsedImplicitly]
     public virtual void ResetTimestamp()
     {
-        var currentUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var currentUnixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         UnixTimeStampToExecute = currentUnixTimestamp + Delay;
     }
 

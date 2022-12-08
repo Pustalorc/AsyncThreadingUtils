@@ -97,12 +97,45 @@ public class BackgroundWorkerWithTasks
     public BackgroundWorkerWithTasks()
     {
         CancellationTokenSource = new CancellationTokenSource();
-        Repeating = true;
+        ExecutingTask = Task.CompletedTask;
+
+        FunctionToExecute = _ => Task.CompletedTask;
+        ExceptionRaised = Console.WriteLine;
+        Repeating = false;
         StartThrowsExceptions = true;
         StopThrowsExceptions = true;
+    }
+
+    /// <summary>
+    ///     The primary constructor for this class.
+    ///     It will allow creating a background worker with the correct required property values.
+    /// </summary>
+    /// <param name="functionToExecute">The <see cref="Func{T,TResult}" /> that the background worker will execute.</param>
+    /// <param name="exceptionRaised">
+    ///     The <see cref="Action{T}" /> that will be called if an exception happens in the
+    ///     background worker.
+    /// </param>
+    /// <param name="repeating">If the background worker should repeat execution indefinitely.</param>
+    /// <param name="startThrowsExceptions">
+    ///     If the background worker should throw an exception when
+    ///     <see cref="Start" /> is called and the worker is busy
+    /// </param>
+    /// <param name="stopThrowsExceptions">
+    ///     If the background worker should throw an exception when
+    ///     <see cref="Stop" /> or <see cref="NonBlockingStop" /> is called
+    ///     and the worker is not currently executing
+    /// </param>
+    public BackgroundWorkerWithTasks(Func<CancellationToken, Task> functionToExecute, Action<Exception> exceptionRaised,
+        bool repeating = false, bool startThrowsExceptions = true, bool stopThrowsExceptions = true)
+    {
+        CancellationTokenSource = new CancellationTokenSource();
         ExecutingTask = Task.CompletedTask;
-        ExceptionRaised = Console.WriteLine;
-        FunctionToExecute = _ => Task.CompletedTask;
+
+        FunctionToExecute = functionToExecute;
+        ExceptionRaised = exceptionRaised;
+        Repeating = repeating;
+        StartThrowsExceptions = startThrowsExceptions;
+        StopThrowsExceptions = stopThrowsExceptions;
     }
 
     /// <summary>

@@ -14,6 +14,7 @@ namespace Pustalorc.Libraries.AsyncThreadingUtils.BackgroundWorker.Implementatio
 ///     This object is initialized with some empty defaults.
 ///     For it to do things, please set values for the public properties.
 /// </remarks>
+[PublicAPI]
 public class BackgroundWorkerWithTasks
 {
     /// <summary>
@@ -23,56 +24,48 @@ public class BackgroundWorkerWithTasks
     ///     You should not use this event if you plan on restarting execution from this.
     ///     This event is raised within the running task, which will prevent Start() from running a new task.
     /// </remarks>
-    [UsedImplicitly]
     public virtual event WorkerCompleted? WorkerExecutionCompleted;
 
     /// <summary>
     ///     A boolean that will return <see langword="true" /> or <see langword="false" /> depending on if the executing task
     ///     has completed.
     /// </summary>
-    [UsedImplicitly]
     public virtual bool IsCompleted => ExecutingTask.IsCompleted;
 
     /// <summary>
     ///     A boolean that will return <see langword="true" /> or <see langword="false" /> depending on if the executing task
     ///     is currently running.
     /// </summary>
-    [UsedImplicitly]
     public virtual bool IsBusy => !ExecutingTask.IsCompleted;
 
     /// <summary>
     ///     If this is set to <see langword="true" />, calling <see cref="Start" /> when the worker is busy will cause an
     ///     exception to be raised.
     /// </summary>
-    [UsedImplicitly]
     public bool StartThrowsExceptions { get; set; }
 
     /// <summary>
     ///     If this is set to <see langword="true" />, calling <see cref="Stop" /> or <see cref="NonBlockingStop" /> when the
     ///     worker is not executing will cause an exception to be raised.
     /// </summary>
-    [UsedImplicitly]
     public bool StopThrowsExceptions { get; set; }
 
     /// <summary>
     ///     If this is set to <see langword="true" />, then the execution will continuously loop until the worker is manually
     ///     stopped by calling <see cref="Stop" /> or <see cref="NonBlockingStop" />.
     /// </summary>
-    [UsedImplicitly]
     public bool Repeating { get; set; }
 
     /// <summary>
     ///     An <see cref="Action{T}" /> that will be called when an <see cref="Exception" /> is raised. Defaults to writing a
     ///     new line in console.
     /// </summary>
-    [UsedImplicitly]
     public Action<Exception> ExceptionRaised { get; set; }
 
     /// <summary>
     ///     A <see cref="Func{T,TResult}" /> that will be called when the background worker is executing.
     ///     If <see cref="Repeating" /> is set to true, this will be called repeatedly.
     /// </summary>
-    [UsedImplicitly]
     public Func<CancellationToken, Task> FunctionToExecute { get; set; }
 
     /// <summary>
@@ -80,14 +73,12 @@ public class BackgroundWorkerWithTasks
     ///     Asynchronous tasks should support cancellation with the token provided by the
     ///     <see cref="CancellationTokenSource" />.
     /// </summary>
-    [UsedImplicitly]
     protected CancellationTokenSource CancellationTokenSource { get; set; }
 
     /// <summary>
     ///     The currently stored <see cref="Task" /> that is doing the work of this background worker.
     ///     This <see cref="Task" /> should be running on a separate thread.
     /// </summary>
-    [UsedImplicitly]
     protected Task ExecutingTask { get; set; }
 
     /// <summary>
@@ -148,7 +139,6 @@ public class BackgroundWorkerWithTasks
     /// <remarks>
     ///     The <see cref="CancellationTokenSource" /> should be re-set to default values here.
     /// </remarks>
-    [UsedImplicitly]
     public virtual void Start()
     {
         if (IsBusy)
@@ -177,7 +167,6 @@ public class BackgroundWorkerWithTasks
     ///     <see cref="CancellationToken" />s.
     ///     If you require non-blocking stop, use <see cref="NonBlockingStop" />.
     /// </remarks>
-    [UsedImplicitly]
     public virtual void Stop()
     {
         if (IsCompleted)
@@ -202,7 +191,6 @@ public class BackgroundWorkerWithTasks
     /// <remarks>
     ///     The <see cref="CancellationTokenSource" /> should be cancelled here.
     /// </remarks>
-    [UsedImplicitly]
     public virtual void NonBlockingStop()
     {
         if (IsCompleted)
@@ -219,7 +207,6 @@ public class BackgroundWorkerWithTasks
     /// <summary>
     ///     The method responsible for handling the execution that this BackgroundWorker will perform.
     /// </summary>
-    [UsedImplicitly]
     protected virtual async Task ExecuteWork()
     {
         do

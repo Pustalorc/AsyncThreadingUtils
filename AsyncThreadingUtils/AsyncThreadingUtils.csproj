@@ -6,10 +6,10 @@
         <RootNamespace>Pustalorc.Libraries.AsyncThreadingUtils</RootNamespace>
         <TargetFrameworks>net48;net481;net6.0;net7.0;netstandard2.0;netstandard2.1</TargetFrameworks>
         <Company>Pustalorc</Company>
-        <Version>1.0.0</Version>
-        <PackageVersion>1.0.0</PackageVersion>
+        <Version>1.1.0</Version>
+        <PackageVersion>1.1.0</PackageVersion>
         <AssemblyVersion>1.0.0</AssemblyVersion>
-        <FileVersion>1.0.0</FileVersion>
+        <FileVersion>1.1.0</FileVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <AssemblyName>Pustalorc.AsyncThreadingUtils</AssemblyName>
         <Product>Pustalorc.AsyncThreadingUtils</Product>
@@ -18,11 +18,11 @@
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Authors>Pustalorc</Authors>
         <Description>Library that adds a BackgroundWorker and TaskQueue with Async support.</Description>
-        <Copyright>Copyright © 2022 Pustalorc</Copyright>
+        <Copyright>Copyright © 2022-2023 Pustalorc</Copyright>
         <RepositoryUrl>https://github.com/Pustalorc/AsyncThreadingUtils</RepositoryUrl>
         <RepositoryType>Github</RepositoryType>
         <PackageTags>Async BackgroundWorker Utility Threading</PackageTags>
-        <PackageReleaseNotes>First Release</PackageReleaseNotes>
+        <PackageReleaseNotes>Added additional delay settings to alleviate high cpu usage.</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

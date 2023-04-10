@@ -48,7 +48,9 @@ Queue = new TaskQueue
 {
     ExceptionRaised = ExceptionRaised,
     DelayOnEmptyQueue = 5000,
-    DelayOnItemNotReadyAndSolo = 1000,
+    DelayOnQueueNotReady = 1000,
+    DelayOnItemNotReady = 25,
+    DelayOnItemExecuted = 1,
     StartThrowsExceptions = false,
     StopThrowsExceptions = false
 };
@@ -57,7 +59,7 @@ Queue = new TaskQueue
 Or use the constructor which takes all the same options as parameters:
 
 ```cs
-Queue = new TaskQueue(ExceptionRaised, 5000, 1000, false, false);
+Queue = new TaskQueue(ExceptionRaised, 5000, 1000, 25, 1, false, false);
 ```
 
 From here, simply start the queue with `Queue.Start()` when you want it to start processing the queue.  

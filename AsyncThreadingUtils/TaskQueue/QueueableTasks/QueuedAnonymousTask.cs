@@ -9,7 +9,7 @@ namespace Pustalorc.Libraries.AsyncThreadingUtils.TaskQueue.QueueableTasks;
 /// <summary>
 ///     An anonymous task that has been queued.
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public sealed class QueuedAnonymousTask : QueueableTask
 {
     /// <summary>

@@ -11,14 +11,13 @@ namespace Pustalorc.Libraries.AsyncThreadingUtils.TaskQueue.Implementations;
 /// <summary>
 ///     A class for queueing <see cref="Task" />s on a <see cref="BackgroundWorkerWithTasks" />.
 /// </summary>
-[UsedImplicitly]
+[PublicAPI]
 public class TaskQueue
 {
     /// <summary>
     ///     The <see cref="BackgroundWorkerWithTasks" /> that will execute the <see cref="QueueableTask" />s in the
     ///     <see cref="Queue" />.
     /// </summary>
-    [UsedImplicitly]
     protected BackgroundWorkerWithTasks BackgroundWorker { get; }
 
     /// <summary>
@@ -28,21 +27,38 @@ public class TaskQueue
     ///     This is concurrent as we will be queueing and dequeueing on different threads, avoiding the use of
     ///     <see langword="lock" />s.
     /// </remarks>
-    [UsedImplicitly]
     protected ConcurrentQueue<QueueableTask> Queue { get; }
 
     /// <summary>
     ///     The delay (in milliseconds) before execution should resume, should the queue currently be empty.
     /// </summary>
-    [UsedImplicitly]
     public int DelayOnEmptyQueue { get; set; }
+
+    /// <summary>
+    ///     The delay (in milliseconds) before execution should resume, should the current item not be ready for execution.
+    /// </summary>
+    public int DelayOnItemNotReady { get; set; }
+
+    /// <summary>
+    ///     The delay (in milliseconds) before execution should resume, should the entire queue not be ready for execution.
+    /// </summary>
+    public int DelayOnQueueNotReady { get; set; }
+
+    /// <summary>
+    ///     The delay (in milliseconds) before execution should resume, after an item has finished its own execution.
+    /// </summary>
+    public int DelayOnItemExecuted { get; set; }
 
     /// <summary>
     ///     The delay (in milliseconds) before execution should resume, should the current item not be ready for execution and
     ///     be the only item in the queue.
     /// </summary>
-    [UsedImplicitly]
-    public int DelayOnItemNotReadyAndSolo { get; set; }
+    [Obsolete("Replaced by DelayOnQueueNotReady. Same functionality is provided, but is more exhaustive.", true)]
+    public int DelayOnItemNotReadyAndSolo
+    {
+        get => DelayOnQueueNotReady;
+        set => DelayOnQueueNotReady = value;
+    }
 
     /// <summary>
     ///     Gets or sets the <see cref="Action{T}" /> that will be called when an <see cref="Exception" /> is raised.
@@ -50,7 +66,6 @@ public class TaskQueue
     /// <remarks>
     ///     This property gets and sets the value directly from the underlying BackgroundWorker.
     /// </remarks>
-    [UsedImplicitly]
     public Action<Exception> ExceptionRaised
     {
         get => BackgroundWorker.ExceptionRaised;
@@ -64,7 +79,6 @@ public class TaskQueue
     /// <remarks>
     ///     This property gets and sets the value directly from the underlying BackgroundWorker.
     /// </remarks>
-    [UsedImplicitly]
     public bool StartThrowsExceptions
     {
         get => BackgroundWorker.StartThrowsExceptions;
@@ -78,12 +92,23 @@ public class TaskQueue
     /// <remarks>
     ///     This property gets and sets the value directly from the underlying BackgroundWorker.
     /// </remarks>
-    [UsedImplicitly]
     public bool StopThrowsExceptions
     {
         get => BackgroundWorker.StopThrowsExceptions;
         set => BackgroundWorker.StopThrowsExceptions = value;
     }
+
+    /// <summary>
+    ///     Sets if the current queue has been explored. Used by IsTaskValid to apply the correct delay if it has been
+    ///     explored.
+    /// </summary>
+    protected bool QueueExplored { get; set; }
+
+    /// <summary>
+    ///     Sets the first task from the queue when exploring from scratch. Used by IsTaskValid to set the value of
+    ///     QueueExplored.
+    /// </summary>
+    protected QueueableTask? FirstNonReadyTask { get; set; }
 
     /// <summary>
     ///     The default constructor for this class. It will default all values to non-null, and exceptions will be thrown by
@@ -100,7 +125,9 @@ public class TaskQueue
         };
 
         DelayOnEmptyQueue = 5000;
-        DelayOnItemNotReadyAndSolo = 1000;
+        DelayOnQueueNotReady = 1000;
+        DelayOnItemNotReady = 25;
+        DelayOnItemExecuted = 1;
     }
 
     /// <summary>
@@ -125,6 +152,7 @@ public class TaskQueue
     ///     If the background worker should throw an exception when <see cref="Stop" /> or
     ///     <see cref="NonBlockingStop" /> is called and the worker is not currently executing
     /// </param>
+    [Obsolete("New constructor with more parameter options added. Please change to use that one.", true)]
     public TaskQueue(Action<Exception> exceptionRaised, int delayOnEmptyQueue = 5000,
         int delayOnItemNotReadyAndSolo = 1000,
         bool startThrowsExceptions = true, bool stopThrowsExceptions = true)
@@ -135,7 +163,50 @@ public class TaskQueue
             stopThrowsExceptions);
 
         DelayOnEmptyQueue = delayOnEmptyQueue;
-        DelayOnItemNotReadyAndSolo = delayOnItemNotReadyAndSolo;
+        DelayOnQueueNotReady = delayOnItemNotReadyAndSolo;
+    }
+
+    /// <summary>
+    ///     The constructor for the class.
+    /// </summary>
+    /// <param name="exceptionRaised">
+    ///     The <see cref="Action{T}" /> that will be called if an exception occurs during execution of tasks.
+    /// </param>
+    /// <param name="delayOnEmptyQueue">
+    ///     The delay (in milliseconds) before execution should resume, should the queue currently
+    ///     be empty.
+    /// </param>
+    /// <param name="delayOnQueueNotReady">
+    ///     The delay (in milliseconds) before execution should resume, should the entire queue not be ready for execution.
+    /// </param>
+    /// <param name="delayOnItemNotReady">
+    ///     The delay (in milliseconds) before execution should resume, should the current item
+    ///     not be ready for execution.
+    /// </param>
+    /// <param name="delayOnItemExecuted">
+    ///     The delay (in milliseconds) before execution should resume, after an item has finished its own execution.
+    /// </param>
+    /// <param name="startThrowsExceptions">
+    ///     If the background worker should throw an exception when <see cref="Start" /> is
+    ///     called and the worker is busy
+    /// </param>
+    /// <param name="stopThrowsExceptions">
+    ///     If the background worker should throw an exception when <see cref="Stop" /> or
+    ///     <see cref="NonBlockingStop" /> is called and the worker is not currently executing
+    /// </param>
+    public TaskQueue(Action<Exception> exceptionRaised, int delayOnEmptyQueue = 5000,
+        int delayOnQueueNotReady = 1000, int delayOnItemNotReady = 25, int delayOnItemExecuted = 1,
+        bool startThrowsExceptions = true, bool stopThrowsExceptions = true)
+    {
+        Queue = new ConcurrentQueue<QueueableTask>();
+
+        BackgroundWorker = new BackgroundWorkerWithTasks(ExecuteWork, exceptionRaised, true, startThrowsExceptions,
+            stopThrowsExceptions);
+
+        DelayOnEmptyQueue = delayOnEmptyQueue;
+        DelayOnQueueNotReady = delayOnQueueNotReady;
+        DelayOnItemNotReady = delayOnItemNotReady;
+        DelayOnItemExecuted = delayOnItemExecuted;
     }
 
     /// <summary>
@@ -144,7 +215,6 @@ public class TaskQueue
     /// <remarks>
     ///     This does not reset or clear the queue.
     /// </remarks>
-    [UsedImplicitly]
     public virtual void Start()
     {
         BackgroundWorker.Start();
@@ -156,7 +226,6 @@ public class TaskQueue
     /// <remarks>
     ///     This does not reset or clear the queue.
     /// </remarks>
-    [UsedImplicitly]
     public virtual void Stop()
     {
         BackgroundWorker.Stop();
@@ -168,7 +237,6 @@ public class TaskQueue
     /// <remarks>
     ///     This does not reset or clear the queue.
     /// </remarks>
-    [UsedImplicitly]
     public virtual void NonBlockingStop()
     {
         BackgroundWorker.NonBlockingStop();
@@ -181,7 +249,6 @@ public class TaskQueue
     /// <param name="delay">The delay (in milliseconds) before this task should be executed.</param>
     /// <param name="repeating">A boolean determining if this task should repeat after execution.</param>
     /// <returns>An <see cref="Action" /> representing the method to cancel the anonymous task from executing.</returns>
-    [UsedImplicitly]
     public virtual Action QueueAnonymousTask(Func<CancellationToken, Task> functionToExecute, int delay = 0,
         bool repeating = false)
     {
@@ -194,17 +261,21 @@ public class TaskQueue
     ///     Queues a <see cref="QueueableTask" /> for execution.
     /// </summary>
     /// <param name="task">The <see cref="QueueableTask" /> to queue.</param>
-    [UsedImplicitly]
     public virtual void QueueTask(QueueableTask task)
     {
         Queue.Enqueue(task);
+
+        if (QueueExplored)
+            QueueExplored = false;
+
+        if (FirstNonReadyTask != null)
+            FirstNonReadyTask = null;
     }
 
     /// <summary>
     ///     Executes work from the queue.
     /// </summary>
     /// <param name="token">The <see cref="CancellationToken" /> to dynamically cancel execution when requested.</param>
-    [UsedImplicitly]
     protected virtual async Task ExecuteWork(CancellationToken token)
     {
         if (token.IsCancellationRequested)
@@ -223,6 +294,7 @@ public class TaskQueue
 
         await ExecuteTask(task, token);
         await CheckAndQueueRepeatingTask(task, token);
+        await Task.Delay(DelayOnItemExecuted, token);
     }
 
     /// <summary>
@@ -230,7 +302,6 @@ public class TaskQueue
     /// </summary>
     /// <param name="token">The <see cref="CancellationToken" /> to dynamically cancel execution when requested.</param>
     /// <returns>A <see cref="QueueableTask" /> if there was one in the queue, <see langword="null" /> otherwise.</returns>
-    [UsedImplicitly]
     protected virtual async Task<QueueableTask?> GetNextTask(CancellationToken token)
     {
         if (Queue.TryDequeue(out var task))
@@ -249,7 +320,6 @@ public class TaskQueue
     ///     <see langword="true" /> if the <see cref="QueueableTask" /> is ready to be executed, <see langword="false" />
     ///     otherwise.
     /// </returns>
-    [UsedImplicitly]
     protected virtual async Task<bool> IsTaskValid(QueueableTask task, CancellationToken token)
     {
         if (task.IsCancelled)
@@ -260,9 +330,16 @@ public class TaskQueue
         if (task.UnixTimeStampToExecute <= currentUnixTimestamp)
             return true;
 
-        if (!Queue.TryPeek(out _))
-            await Task.Delay(DelayOnItemNotReadyAndSolo, token);
+        var delay = DelayOnItemNotReady;
 
+        if (QueueExplored)
+            delay = DelayOnQueueNotReady;
+        else if (FirstNonReadyTask == null)
+            FirstNonReadyTask = task;
+        else if (FirstNonReadyTask == task)
+            QueueExplored = true;
+
+        await Task.Delay(delay, token);
         Queue.Enqueue(task);
         return false;
     }
@@ -273,7 +350,6 @@ public class TaskQueue
     /// </summary>
     /// <param name="task">The <see cref="QueueableTask" /> to be executed.</param>
     /// <param name="token">The <see cref="CancellationToken" /> to dynamically cancel execution when requested.</param>
-    [UsedImplicitly]
     protected virtual async Task ExecuteTask(QueueableTask task, CancellationToken token)
     {
         try
@@ -291,7 +367,6 @@ public class TaskQueue
     /// </summary>
     /// <param name="task">The <see cref="QueueableTask" /> to check.</param>
     /// <param name="token">The <see cref="CancellationToken" /> to dynamically cancel execution when requested.</param>
-    [UsedImplicitly]
     protected virtual Task CheckAndQueueRepeatingTask(QueueableTask task, CancellationToken token)
     {
         if (!task.IsRepeating || task.IsCancelled)
